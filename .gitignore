@@ -36,3 +36,8 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# 민감한 정보 파일
+.env
+constants/apiKeys.ts
+firebase/config.ts
