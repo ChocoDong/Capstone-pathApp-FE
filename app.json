@@ -14,13 +14,13 @@
                 "googleMaps": {
                     "apiKey": "AIzaSyC8fok9-HjSp65TrWrVLcD9eceD7ZerMo0"
                 },
-
                 "infoPlist": {
                     "NSAppTransportSecurity": {
                         "NSAllowsArbitraryLoads": true
                     }
                 },
-                "bundleIdentifier": "com.anonymous.pathapp"
+                "bundleIdentifier": "com.anonymous.pathapp",
+                "googleMapsApiKey": "your_api_key_here"
             },
             "android": {
                 "adaptiveIcon": {

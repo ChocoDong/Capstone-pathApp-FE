@@ -11,11 +11,28 @@ import {
     Modal,
     FlatList,
     Pressable,
+    ActivityIndicator,
+    ScrollView,
+    Platform,
 } from 'react-native';
 import { router, useLocalSearchParams, useRouter } from 'expo-router';
-import { House, MapPin, Compass, User, MagnifyingGlass, CrosshairSimple, CaretDown } from 'phosphor-react-native';
+import {
+    House,
+    MapPin,
+    Compass,
+    User,
+    MagnifyingGlass,
+    CrosshairSimple,
+    CaretDown,
+    Tree,
+    Buildings,
+    ForkKnife,
+    Confetti,
+    X,
+} from 'phosphor-react-native';
 import * as Location from 'expo-location';
 import { loadTravelParams, saveTravelParams, TravelParams } from '../../utils/storage';
+import { COLORS, SHADOWS, CARD_STYLES, TYPOGRAPHY, SPACING } from '../../constants/Theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,25 +42,29 @@ export default function Home() {
         {
             id: 'leisure',
             title: '휴양',
-            image: require('../assets/images/Cat.jpeg'),
+            description: '편안한 휴식을 즐길 수 있는 여행',
+            icon: <Tree size={40} weight="duotone" color={COLORS.accent} />,
         },
         {
             id: 'tourism',
             title: '관광',
-            image: require('../assets/images/Cat.jpeg'),
+            description: '다양한 명소를 방문하는 여행',
+            icon: <Buildings size={40} weight="duotone" color={COLORS.accent} />,
         },
     ];
 
     const experienceTravelTypes = [
         {
             id: 'food',
-            title: '식도락 여행',
-            image: require('../assets/images/Cat.jpeg'),
+            title: '음식',
+            description: '맛집 탐방 중심의 여행',
+            icon: <ForkKnife size={40} weight="duotone" color={COLORS.accent} />,
         },
         {
-            id: 'experience',
-            title: '경험을 추구하는 여행',
-            image: require('../assets/images/Cat.jpeg'),
+            id: 'culture',
+            title: '문화',
+            description: '역사와 문화를 체험하는 여행',
+            icon: <Confetti size={40} weight="duotone" color={COLORS.accent} />,
         },
     ];
 
@@ -53,8 +74,9 @@ export default function Home() {
     const [startLocation, setStartLocation] = useState<string>('');
     const [endLocation, setEndLocation] = useState<string>('');
     const [selectedDays, setSelectedDays] = useState<string>('3');
-    const [showDaysDropdown, setShowDaysDropdown] = useState(false);
+    const [showDaysModal, setShowDaysModal] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isGenerating, setIsGenerating] = useState<boolean>(false);
     const [initialDataLoaded, setInitialDataLoaded] = useState(false);
     const daysOptions = ['1', '2', '3', '4', '5', '6', '7'];
 
@@ -240,321 +262,455 @@ export default function Home() {
     const handleDaysSelect = (days: string) => {
         setSelectedDays(days);
         saveParamToStorage('travelDays', days);
-        setShowDaysDropdown(false);
-    };
-
-    // 여행 타입 선택 컴포넌트
-    const renderTravelTypeButtons = (types: any[], selectedType: string | null, onSelect: (id: string) => void) => {
-        return (
-            <View style={styles.travelTypeRow}>
-                {types.map((type) => (
-                    <TouchableOpacity key={type.id} style={styles.travelTypeCircle} onPress={() => onSelect(type.id)}>
-                        <View
-                            style={[styles.circleImageContainer, selectedType === type.id && styles.selectedTravelType]}
-                        >
-                            <Image source={type.image} style={styles.circleImage} />
-                        </View>
-                        <Text style={styles.travelTypeTitle}>{type.title}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        );
+        setShowDaysModal(false);
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.searchSection}>
-                <View style={styles.locationRow}>
-                    <Text style={styles.label}>출발지</Text>
-                    <View style={styles.rightContainer}>
-                        <TouchableOpacity
-                            style={styles.locationInputContainer}
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>나만의 여행 플래너</Text>
+                <Text style={styles.headerSubtitle}>여행 정보를 입력하고 맞춤 코스를 만들어보세요</Text>
+            </View>
+
+            <View style={styles.content}>
+                {/* 장소 입력 섹션 */}
+                <View style={styles.sectionCard}>
+                    <Text style={styles.sectionTitle}>여행 장소</Text>
+
+                    {/* 출발지 */}
+                    <View style={styles.locationInputContainer}>
+                        <View style={[styles.iconContainer, styles.startIconContainer]}>
+                            <MapPin size={22} color="#4CAF50" weight="fill" />
+                        </View>
+                        <Pressable
+                            style={[styles.locationInput, startLocation ? styles.filledInput : {}]}
                             onPress={() => handleLocationSearch('start')}
                         >
-                            <Text style={styles.locationText} numberOfLines={1}>
-                                {isLoading ? '위치를 가져오는 중...' : startLocation || '위치를 검색해주세요'}
+                            <Text
+                                style={startLocation ? styles.inputText : styles.placeholderText}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                            >
+                                {startLocation || '출발지를 입력하세요'}
                             </Text>
                             <TouchableOpacity
-                                style={styles.inlineButton}
+                                style={[styles.locationButton, styles.startLocationButton]}
                                 onPress={getCurrentLocation}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                 disabled={isLoading}
                             >
-                                <CrosshairSimple size={20} color={isLoading ? '#cccccc' : '#007bff'} />
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color={COLORS.white} />
+                                ) : (
+                                    <CrosshairSimple size={14} color={COLORS.white} weight="bold" />
+                                )}
                             </TouchableOpacity>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.searchIconButton}
-                            onPress={() => handleLocationSearch('start')}
-                            disabled={isLoading}
-                        >
-                            <MagnifyingGlass size={20} color="#666" />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
-                </View>
 
-                <View style={styles.locationRow}>
-                    <Text style={styles.label}>도착지</Text>
-                    <View style={styles.rightContainer}>
-                        <TouchableOpacity
-                            style={styles.locationInputContainer}
+                    {/* 도착지 */}
+                    <View style={styles.locationInputContainer}>
+                        <View style={[styles.iconContainer, styles.endIconContainer]}>
+                            <MapPin size={22} color="#FF9800" weight="fill" />
+                        </View>
+                        <Pressable
+                            style={[styles.locationInput, endLocation ? styles.filledInput : {}]}
                             onPress={() => handleLocationSearch('end')}
                         >
-                            <Text style={styles.locationText} numberOfLines={1}>
-                                {endLocation || '위치를 검색해주세요'}
+                            <Text
+                                style={endLocation ? styles.inputText : styles.placeholderText}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                            >
+                                {endLocation || '도착지를 입력하세요'}
                             </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.searchIconButton} onPress={() => handleLocationSearch('end')}>
-                            <MagnifyingGlass size={20} color="#666" />
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 </View>
 
-                <View style={styles.locationRow}>
-                    <Text style={styles.label}>여행 일수</Text>
-                    <View style={styles.rightContainer}>
-                        <TouchableOpacity
-                            style={styles.daysDropdownContainer}
-                            onPress={() => setShowDaysDropdown(true)}
-                        >
-                            <Text style={styles.daysText}>{selectedDays}일</Text>
-                            <CaretDown size={16} color="#666" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                {/* 여행 일수 선택 */}
+                <View style={styles.sectionCard}>
+                    <Text style={styles.sectionTitle}>여행 일수</Text>
 
-                {/* 드롭다운 모달 */}
-                <Modal
-                    transparent={true}
-                    visible={showDaysDropdown}
-                    animationType="fade"
-                    onRequestClose={() => setShowDaysDropdown(false)}
-                >
-                    <Pressable style={styles.modalOverlay} onPress={() => setShowDaysDropdown(false)}>
-                        <View style={styles.dropdownContainer}>
-                            <FlatList
-                                data={daysOptions}
-                                keyExtractor={(item) => item}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.dropdownItem,
-                                            selectedDays === item && styles.selectedDropdownItem,
-                                        ]}
-                                        onPress={() => handleDaysSelect(item)}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.dropdownItemText,
-                                                selectedDays === item && styles.selectedDropdownItemText,
-                                            ]}
-                                        >
-                                            {item}일
-                                        </Text>
+                    <TouchableOpacity style={styles.daysSelector} onPress={() => setShowDaysModal(true)}>
+                        <Text style={styles.inputText}>{selectedDays}일</Text>
+                        <CaretDown size={16} color={COLORS.text} weight="bold" />
+                    </TouchableOpacity>
+
+                    {/* 일수 선택 모달 */}
+                    <Modal
+                        visible={showDaysModal}
+                        transparent={true}
+                        animationType="fade"
+                        onRequestClose={() => setShowDaysModal(false)}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContent}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>여행 일수 선택</Text>
+                                    <TouchableOpacity onPress={() => setShowDaysModal(false)}>
+                                        <X size={20} color={COLORS.textLight} weight="bold" />
                                     </TouchableOpacity>
-                                )}
-                            />
+                                </View>
+                                <View style={styles.modalDaysList}>
+                                    {daysOptions.map((day) => (
+                                        <TouchableOpacity
+                                            key={day}
+                                            style={[styles.dayOption, selectedDays === day && styles.selectedDayOption]}
+                                            onPress={() => handleDaysSelect(day)}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.dayOptionText,
+                                                    selectedDays === day && styles.selectedDayOptionText,
+                                                ]}
+                                            >
+                                                {day}일
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
                         </View>
-                    </Pressable>
-                </Modal>
+                    </Modal>
+                </View>
+
+                {/* 여행 타입 - 휴양/관광 */}
+                <View style={styles.sectionCard}>
+                    <Text style={styles.sectionTitle}>여행 유형 선택</Text>
+                    <Text style={styles.sectionSubtitle}>즐기고 싶은 여행 유형을 선택하세요</Text>
+
+                    {/* 첫 번째 타입 옵션 */}
+                    <View style={styles.travelTypeContainer}>
+                        {leisureTravelTypes.map((type) => (
+                            <TouchableOpacity
+                                key={type.id}
+                                style={[
+                                    styles.travelTypeButton,
+                                    selectedLeisureType === type.id && styles.selectedTypeButton,
+                                ]}
+                                onPress={() => handleLeisureTypeSelect(type.id)}
+                            >
+                                <View style={styles.iconWrapper}>{type.icon}</View>
+                                <Text
+                                    style={[
+                                        styles.travelTypeTitle,
+                                        selectedLeisureType === type.id && styles.selectedTypeText,
+                                    ]}
+                                >
+                                    {type.title}
+                                </Text>
+                                <Text style={styles.travelTypeDescription}>{type.description}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* 두 번째 타입 옵션 */}
+                    <View style={styles.travelTypeContainer}>
+                        {experienceTravelTypes.map((type) => (
+                            <TouchableOpacity
+                                key={type.id}
+                                style={[
+                                    styles.travelTypeButton,
+                                    selectedExperienceType === type.id && styles.selectedTypeButton,
+                                ]}
+                                onPress={() => handleExperienceTypeSelect(type.id)}
+                            >
+                                <View style={styles.iconWrapper}>{type.icon}</View>
+                                <Text
+                                    style={[
+                                        styles.travelTypeTitle,
+                                        selectedExperienceType === type.id && styles.selectedTypeText,
+                                    ]}
+                                >
+                                    {type.title}
+                                </Text>
+                                <Text style={styles.travelTypeDescription}>{type.description}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+
+                {/* 여행 경로 생성 버튼 */}
+                <TouchableOpacity
+                    style={[styles.generateButton, (!startLocation || !endLocation) && styles.disabledButton]}
+                    onPress={() => {
+                        if (startLocation && endLocation) {
+                            setIsGenerating(true);
+                            setTimeout(() => {
+                                setIsGenerating(false);
+                                router.push({
+                                    pathname: '../route/result',
+                                    params: {
+                                        start: startLocation,
+                                        end: endLocation,
+                                        days: selectedDays,
+                                        type:
+                                            selectedLeisureType && selectedExperienceType
+                                                ? `${selectedLeisureType},${selectedExperienceType}`
+                                                : selectedLeisureType || selectedExperienceType || '',
+                                    },
+                                });
+                            }, 500);
+                        } else {
+                            Alert.alert('알림', '출발지와 도착지를 모두 입력해주세요.');
+                        }
+                    }}
+                    disabled={!startLocation || !endLocation || isGenerating}
+                >
+                    {isGenerating ? (
+                        <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                        <>
+                            <Text style={styles.generateButtonText}>여행 경로 생성하기</Text>
+                            <Compass style={styles.buttonIcon} size={22} color={COLORS.white} weight="bold" />
+                        </>
+                    )}
+                </TouchableOpacity>
             </View>
-
-            <View style={styles.travelTypeSection}>
-                <Text style={styles.sectionTitle}>휴양과 관광 중 선택해주세요</Text>
-                {renderTravelTypeButtons(leisureTravelTypes, selectedLeisureType, handleLeisureTypeSelect)}
-
-                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>식도락과 경험 추구 중 선택해주세요</Text>
-                {renderTravelTypeButtons(experienceTravelTypes, selectedExperienceType, handleExperienceTypeSelect)}
-            </View>
-
-            <TouchableOpacity
-                onPress={() => {
-                    if (selectedLeisureType && selectedExperienceType) {
-                        router.push({
-                            pathname: '../(tabs)/List',
-                            params: {
-                                leisureType: selectedLeisureType,
-                                experienceType: selectedExperienceType,
-                                startLocation,
-                                endLocation,
-                                travelDays: selectedDays,
-                            },
-                        });
-                    }
-                }}
-                style={[
-                    styles.searchRouteButton,
-                    (!selectedLeisureType || !selectedExperienceType) && styles.disabledButton,
-                ]}
-                disabled={!selectedLeisureType || !selectedExperienceType}
-            >
-                <Text style={styles.searchRouteButtonText}>추천 경로 검색하기</Text>
-            </TouchableOpacity>
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: COLORS.background,
         padding: 20,
     },
-    searchSection: {
-        marginBottom: 20,
+    header: {
+        marginBottom: 25,
+        paddingTop: 10,
     },
-    locationRow: {
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: COLORS.text,
+        marginBottom: 8,
+    },
+    headerSubtitle: {
+        fontSize: 16,
+        color: COLORS.textLight,
+    },
+    content: {
+        paddingBottom: 80,
+    },
+    sectionCard: {
+        backgroundColor: COLORS.white,
+        padding: 20,
+        borderRadius: 12,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.text,
+        marginBottom: 10,
+    },
+    sectionSubtitle: {
+        fontSize: 14,
+        color: COLORS.textLight,
+        marginBottom: 16,
+    },
+    locationInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
     },
-    label: {
-        width: '18%',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    rightContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    locationInputContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        backgroundColor: '#fff',
-    },
-    locationText: {
-        flex: 1,
-        fontSize: 14,
-        color: '#333',
-    },
-    inlineButton: {
-        padding: 4,
-    },
-    searchIconButton: {
-        padding: 10,
-        marginLeft: 8,
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-    },
-    travelTypeSection: {
-        alignItems: 'center',
-    },
-    sectionTitle: {
-        textAlign: 'center',
-        fontSize: 16,
-        marginBottom: 15,
-    },
-    travelTypeRow: {
-        flexDirection: 'row',
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: COLORS.secondary,
         justifyContent: 'center',
-        width: '100%',
-    },
-    travelTypeCircle: {
         alignItems: 'center',
-        marginHorizontal: 25,
+        marginRight: 12,
     },
-    circleImageContainer: {
-        width: width * 0.25,
-        height: width * 0.25,
-        borderRadius: (width * 0.25) / 2,
-        overflow: 'hidden',
+    startIconContainer: {
+        backgroundColor: '#E8F5E9',
+    },
+    endIconContainer: {
+        backgroundColor: '#FFF3E0',
+    },
+    startLocationButton: {
+        backgroundColor: '#78A9FF',
+    },
+    locationInput: {
+        flex: 1,
+        paddingVertical: 10,
+        paddingHorizontal: 15,
         borderWidth: 1,
-        borderColor: '#e0e0e0',
-        marginBottom: 8,
+        borderColor: COLORS.border,
+        borderRadius: 10,
+        backgroundColor: COLORS.white,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        height: 48,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 1,
     },
-    circleImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
+    filledInput: {
+        borderColor: COLORS.accent,
     },
-    selectedTravelType: {
-        opacity: 1,
-        borderColor: '#007bff',
-        borderWidth: 2,
+    placeholderText: {
+        color: COLORS.textLight,
+        opacity: 0.6,
+        flex: 1,
+        marginRight: 8,
+        fontSize: 14,
+    },
+    inputText: {
+        fontSize: 15,
+        color: COLORS.text,
+        flex: 1,
+        marginRight: 8,
+    },
+    locationButton: {
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.15,
+        shadowRadius: 1,
+        elevation: 1,
+    },
+    travelTypeContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    travelTypeButton: {
+        flex: 1,
+        padding: 16,
+        marginHorizontal: 6,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 12,
+        backgroundColor: COLORS.white,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 160,
+    },
+    selectedTypeButton: {
+        borderColor: COLORS.accent,
+        backgroundColor: COLORS.selected,
+    },
+    iconWrapper: {
+        marginBottom: 12,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     travelTypeTitle: {
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 5,
+        color: COLORS.text,
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    travelTypeDescription: {
+        fontSize: 12,
+        color: COLORS.textLight,
         textAlign: 'center',
     },
-    searchRouteButton: {
-        backgroundColor: '#007bff',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-        position: 'absolute',
-        bottom: 20,
-        left: 20,
-        right: 20,
+    selectedTypeText: {
+        color: COLORS.accent,
     },
-    disabledButton: {
-        backgroundColor: '#cccccc',
-    },
-    searchRouteButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    daysDropdownContainer: {
-        flex: 1,
+    daysSelector: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        padding: 12,
         borderWidth: 1,
-        borderColor: '#e0e0e0',
+        borderColor: COLORS.border,
         borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        backgroundColor: '#fff',
-    },
-    daysText: {
-        flex: 1,
-        fontSize: 14,
-        color: '#333',
+        backgroundColor: COLORS.white,
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    dropdownContainer: {
-        width: '60%',
-        maxHeight: 300,
-        backgroundColor: 'white',
-        borderRadius: 8,
-        overflow: 'hidden',
-        elevation: 5,
+    modalContent: {
+        width: '80%',
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        padding: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
+        elevation: 5,
     },
-    dropdownItem: {
-        padding: 15,
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+        paddingBottom: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: COLORS.border,
     },
-    selectedDropdownItem: {
-        backgroundColor: '#e6f2ff',
-    },
-    dropdownItemText: {
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    selectedDropdownItemText: {
-        color: '#007bff',
+    modalTitle: {
+        fontSize: 18,
         fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    modalDaysList: {
+        maxHeight: height * 0.4,
+    },
+    dayOption: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.border,
+        alignItems: 'center',
+    },
+    selectedDayOption: {
+        backgroundColor: COLORS.selected,
+    },
+    dayOptionText: {
+        fontSize: 16,
+        color: COLORS.text,
+    },
+    selectedDayOptionText: {
+        color: COLORS.accent,
+        fontWeight: 'bold',
+    },
+    generateButton: {
+        backgroundColor: COLORS.button,
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 24,
+        marginBottom: 40,
+        minHeight: 56,
+        flexDirection: 'row',
+    },
+    generateButtonText: {
+        color: COLORS.white,
+        fontWeight: 'bold',
+        fontSize: 16,
+        marginRight: 8,
+    },
+    buttonIcon: {
+        marginLeft: 8,
+    },
+    disabledButton: {
+        backgroundColor: COLORS.border,
+        opacity: 0.7,
     },
 });

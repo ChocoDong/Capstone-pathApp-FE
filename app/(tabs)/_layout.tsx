@@ -22,7 +22,7 @@ export default function TabLayout() {
                 <Tabs.Screen
                     name="List"
                     options={{
-                        title: '선호한 곳',
+                        title: '여행 경로',
                         tabBarIcon: ({ color }) => <MapPin weight="fill" color={color} size={24} />,
                     }}
                 />
