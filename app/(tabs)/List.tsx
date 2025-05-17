@@ -128,11 +128,11 @@ export default function List() {
         try {
             console.log('여행 경로 요청 파라미터:', JSON.stringify(travelParams));
             // API 요청
-            const response = await axios.post('http://192.168.1.114:3000/recommend-route/travel-route', travelParams, {
+            const response = await axios.post('http://10.32.32.62:3000/recommend-route/travel-route', travelParams, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                timeout: 10000, // 10초 타임아웃
+                timeout: 30000, // 10초 타임아웃
             });
             console.log('여행 경로 응답 상태:', response.status);
 

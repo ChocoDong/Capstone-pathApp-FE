@@ -4,7 +4,7 @@ import { auth } from '../firebase/config';
 
 // 서버 API 기본 URL - 로컬 개발 서버 주소 (필요시 수정)
 // const API_BASE_URL = 'http://localhost:3000';
-const API_BASE_URL = 'http://192.168.1.114:3000'; // 기존 IP 주소
+const API_BASE_URL = 'http://10.32.32.62:3000'; // 올바른 IP 주소
 
 export interface Review {
     id: string;
