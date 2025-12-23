@@ -12,7 +12,7 @@
             "supportsTablet": true,
             "config": {
                 "googleMaps": {
-                    "apiKey": "AIzaSyC8fok9-HjSp65TrWrVLcD9eceD7ZerMo0"
+                    "apiKey": ""
                 },
                 "infoPlist": {
                     "NSAppTransportSecurity": {
